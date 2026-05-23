@@ -1,11 +1,7 @@
-// VTweaks AI Proxy — Vercel Edge Function
-// Recibe mensajes del app y los manda a Groq sin exponer la API key
-
-export default async function handler(req, res) {
-  // CORS
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -13,7 +9,6 @@ export default async function handler(req, res) {
   try {
     const { messages, appKey } = req.body;
 
-    // Verificar que viene del app con una firma válida
     if (!appKey || appKey !== process.env.APP_SECRET) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -22,12 +17,11 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Invalid messages' });
     }
 
-    // Llamar a Groq
     const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`
+        'Authorization': 'Bearer ' + process.env.GROQ_API_KEY
       },
       body: JSON.stringify({
         model: 'llama3-70b-8192',
